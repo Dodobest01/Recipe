@@ -25,6 +25,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.10.4",
     "axios": "^0.20.0",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.20",
+    "uniqid": "^5.2.0"
   }
 }

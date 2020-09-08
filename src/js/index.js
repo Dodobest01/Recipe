@@ -5,11 +5,14 @@ import * as searchView from "./view/searchView";
 import Recipe from "./model/Recipe";
 import List from "./model/list";
 import * as listView from "./view/listView";
+import Like from "./model/like";
+import * as likesView from "./view/likeView";
 import {
   renderRecipe,
   clearRecipe,
   highlightSelectRecipe,
 } from "./view/recipeView";
+import Likes from "./model/like";
 /* 
 web app tuluv
 -hailtin query , ur dun
@@ -19,6 +22,7 @@ web app tuluv
 */
 
 const state = {};
+//like ses haah
 
 /*
 hailtiin controller = MVC
@@ -80,7 +84,7 @@ const controlRecipe = async () => {
     state.recipe.calcTime();
     state.recipe.calcHuniiToo();
     // joroo delgetsend gargana
-    renderRecipe(state.recipe);
+    renderRecipe(state.recipe, state.likes.isLiked(id));
   }
 };
 
@@ -89,7 +93,14 @@ const controlRecipe = async () => {
 ["hashchange", "load"].forEach((e) =>
   window.addEventListener(e, controlRecipe)
 );
-
+window.addEventListener("load", (e) => {
+  // shineer like modul app ehlehed
+  if (!state.likes) state.likes = new Likes();
+  //like ses gargah isehiig shiideh
+  likesView.toggleLikeMenu(state.likes.getNumberOfLikes());
+  // liakyy baival ses ind nemj haruulna
+  state.likes.likes.forEach((like) => likesView.renderLike(like));
+});
 /*
  nairlaga controller
  */
@@ -101,15 +112,61 @@ const controlList = () => {
 
   // ug model ruu odoo haragdaj
   state.recipe.ingredients.forEach((n) => {
-    state.list.addItem(n);
+    const item = state.list.addItem(n);
     // console.log(n);
-    listView.renderItem(n);
+    listView.renderItem(item);
   });
+};
+// like controller
+//
+//
+
+const controlLike = () => {
+  // 1. like model uusgene
+  if (!state.likes) state.likes = new Like();
+  // 2. Odoo haragdaj baigaa joriin id olj avah
+  const currentRecipeId = state.recipe.id;
+  // 3. ene joriig likesan isehiig shalgaj avah
+  if (state.likes.isLiked(currentRecipeId)) {
+    // 4. Like bol like dar
+    state.likes.deleteLike(currentRecipeId);
+    // like sesnees ustgana
+    likesView.deleteLike(currentRecipeId);
+    // like haragdah baidal
+    likesView.toggleLikeBtn(false);
+
+    // console.log(state.likes);
+  } else {
+    // daraagui bol like
+
+    const newLike = state.likes.addLike(
+      currentRecipeId,
+      state.recipe.title,
+      state.recipe.publisher,
+      state.recipe.image_url
+    );
+    likesView.renderLike(newLike);
+    likesView.toggleLikeBtn(true);
+    // console.log(state.likes);
+  }
+  likesView.toggleLikeMenu(state.likes.getNumberOfLikes());
 };
 
 elements.recipeDiv.addEventListener("click", (e) => {
   //
   if (e.target.matches(".recipe__btn, .recipe__btn *")) {
     controlList();
+  } else if (e.target.matches(".recipe__love, .recipe__love *")) {
+    //
+    controlLike();
   }
+});
+
+elements.shoppinglist.addEventListener("click", (e) => {
+  // click hiisen li element  data-itemid
+  const id = e.target.closest(".shopping__item").dataset.itemid;
+  // oldson id modeloos ustgana
+  state.list.deleteItem(id);
+  // delgetsees ustgana
+  listView.deleteItem(id);
 });
